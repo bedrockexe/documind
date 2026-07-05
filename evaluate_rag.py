@@ -81,6 +81,7 @@ print(result)
 
 df = result.to_pandas()
 metric_cols = [c for c in df.columns if c not in ("user_input", "retrieved_contexts", "response", "reference")]
+
 print("\nFailures per metric (want 0):")
 for c in metric_cols:
     print(f"  {c}: {df[c].isna().sum()} NaN out of {len(df)}")
@@ -89,3 +90,24 @@ print("\nPer-question scores:")
 show = df.copy()
 show["question"] = show["user_input"].str.slice(0, 45)
 print(show[["question"] + metric_cols].to_string(index=False))
+
+# --- 5. Log this run to a CSV so you can track scores over time --------------
+# Optional label:  python evaluate_rag.py "chunk_size=800 baseline"
+import csv, os
+from datetime import datetime
+
+note = sys.argv[1] if len(sys.argv) > 1 else ""
+means = df[metric_cols].mean().round(4).to_dict()   # aggregate = mean, NaNs skipped
+
+row = {"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"), "note": note, "n_questions": len(df)}
+row.update(means)
+
+csv_path = "eval_results.csv"
+write_header = not os.path.exists(csv_path)
+with open(csv_path, "a", newline="", encoding="utf-8") as f:
+    writer = csv.DictWriter(f, fieldnames=list(row.keys()))
+    if write_header:
+        writer.writeheader()
+    writer.writerow(row)
+
+print(f"\nLogged to {csv_path}" + (f'  (label: "{note}")' if note else ""))

@@ -1,0 +1,2 @@
+timestamp,note,n_questions,faithfulness,answer_relevancy,context_precision
+2026-07-05 11:57,"baseline - chunk_size 800, k=4",6,0.8333,0.8517,0.8796

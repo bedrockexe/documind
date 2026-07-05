@@ -3,7 +3,10 @@ from pypdf import PdfReader
 import chromadb
 
 # Connect to a local, on-disk database (just a folder)
-client = chromadb.PersistentClient(path="./chroma_db")
+client = chromadb.HttpClient(
+    host=os.getenv("CHROMA_HOST", "localhost"),
+    port=int(os.getenv("CHROMA_PORT", "8001")),
+)
 
 # A "collection" is like a table that holds your chunks
 collection = client.get_or_create_collection(name="docs")
