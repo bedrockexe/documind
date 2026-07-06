@@ -9,8 +9,8 @@ resource "aws_security_group" "web" {
 # SSH — only from YOUR IP
 resource "aws_vpc_security_group_ingress_rule" "ssh" {
   security_group_id = aws_security_group.web.id
-  description       = "SSH from my machine"
-  cidr_ipv4         = var.my_ip
+  description       = "SSH from anywhere (key-only auth)"
+  cidr_ipv4         = "0.0.0.0/0"
   from_port         = 22
   to_port           = 22
   ip_protocol       = "tcp"
