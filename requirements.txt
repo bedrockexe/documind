@@ -6,3 +6,4 @@ ollama
 sentence-transformers
 langfuse
 python-dotenv
+openai
