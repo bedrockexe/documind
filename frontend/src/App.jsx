@@ -10,6 +10,30 @@ const EXAMPLES = [
 ];
 const fmt = (ts) => new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
+// crypto.randomUUID and navigator.clipboard exist only in "secure contexts"
+// (HTTPS or localhost). Over plain HTTP they're disabled, so we fall back.
+const uid = () =>
+  window.crypto?.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+const copyText = async (text) => {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+  } catch {}
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); } catch {}
+  document.body.removeChild(ta);
+};
+
 const Burst = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg>);
 const Doc = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h9l7 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M13 4v7h7"/></svg>);
 const UserIcon = () => (<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>);
@@ -20,7 +44,7 @@ const RegenIcon = () => (<svg width="13" height="13" viewBox="0 0 24 24" fill="n
 function Assistant({ msg, canRegen, onRegen }) {
   const [copied, setCopied] = useState(false);
   const [showSrc, setShowSrc] = useState(false);
-  const copy = () => { navigator.clipboard.writeText(msg.text); setCopied(true); setTimeout(() => setCopied(false), 1500); };
+  const copy = () => { copyText(msg.text); setCopied(true); setTimeout(() => setCopied(false), 1500); };
   const empty = msg.loading && !msg.text;
 
   return (
@@ -119,7 +143,7 @@ export default function App() {
 
     let convId = activeId;
     const isNew = !convId;
-    if (isNew) convId = crypto.randomUUID();
+    if (isNew) convId = uid();
 
     setConversations(prev => {
       const base = isNew ? [{ id: convId, title: q.slice(0, 42), messages: [] }, ...prev] : prev;
