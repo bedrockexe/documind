@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()  # load LANGFUSE_* before anything else so tracing is configured
 
+import os
 import json
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
@@ -13,9 +14,16 @@ from rag import ask, build_prompt, retrieve_with_sources, MODEL, LLM_PROVIDER, g
 langfuse = get_client()
 
 app = FastAPI()
+
+# Dev origins always allowed; the deployed frontend's origin comes from the environment.
+_origins = ["http://localhost:5173", "http://localhost:3000"]
+_frontend_origin = os.getenv("FRONTEND_ORIGIN")
+if _frontend_origin:
+    _origins.append(_frontend_origin)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

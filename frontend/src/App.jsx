@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import "./App.css";
 
-const API = "http://localhost:8000/ask-stream";
+const API = (import.meta.env.VITE_API_URL || "http://localhost:8000") + "/ask-stream";
 const EXAMPLES = [
   "What problem does the paper address?",
   "What methodology was used?",
