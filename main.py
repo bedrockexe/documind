@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import ollama
 from langfuse import observe, get_client
-from rag import ask, build_prompt, retrieve_with_sources, MODEL
+from rag import ask, build_prompt, retrieve_with_sources, MODEL, LLM_PROVIDER, groq_client
 
 langfuse = get_client()
 
@@ -32,16 +32,29 @@ def ask_endpoint(body: Question):
 
 @observe(as_type="generation", transform_to_string=lambda chunks: "".join(chunks))
 def _generate_stream(prompt):
-    stream = ollama.chat(model=MODEL, messages=[{"role": "user", "content": prompt}], stream=True)
     usage = {}
-    for part in stream:
-        content = part["message"]["content"]
-        try:
-            if part["done"]:      # the final chunk carries the token counts
-                usage = {"input": part["prompt_eval_count"], "output": part["eval_count"]}
-        except Exception:
-            pass
-        yield content
+    if LLM_PROVIDER == "groq":
+        stream = groq_client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            stream=True,
+            stream_options={"include_usage": True},  # ask for a final usage chunk
+        )
+        for chunk in stream:
+            if chunk.choices and chunk.choices[0].delta.content:
+                yield chunk.choices[0].delta.content
+            if chunk.usage:  # only the final chunk carries token counts
+                usage = {"input": chunk.usage.prompt_tokens, "output": chunk.usage.completion_tokens}
+    else:  # ollama (local dev) — unchanged behaviour
+        stream = ollama.chat(model=MODEL, messages=[{"role": "user", "content": prompt}], stream=True)
+        for part in stream:
+            content = part["message"]["content"]
+            try:
+                if part["done"]:
+                    usage = {"input": part["prompt_eval_count"], "output": part["eval_count"]}
+            except Exception:
+                pass
+            yield content
     langfuse.update_current_generation(model=MODEL, usage_details=usage or None)
 
 

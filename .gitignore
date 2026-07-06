@@ -3,3 +3,9 @@ chroma_db/
 __pycache__/
 node_modules/
 .env
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
