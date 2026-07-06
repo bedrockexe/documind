@@ -11,6 +11,7 @@ import ollama
 CHROMA_HOST = os.getenv("CHROMA_HOST", "localhost")
 CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8001"))
 MODEL = os.getenv("MODEL", "llama3.2:3b")
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama")
 DATA_DIR = "data"
 
 
@@ -72,7 +73,8 @@ def ensure_ingested(client):
 
 if __name__ == "__main__":
     client = wait_for_chroma()
-    wait_for_ollama()
-    ensure_model()
+    if LLM_PROVIDER == "ollama":
+        wait_for_ollama()
+        ensure_model()
     ensure_ingested(client)
     print("Startup complete — launching API.", flush=True)
