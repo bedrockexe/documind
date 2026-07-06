@@ -210,7 +210,7 @@ export default function App() {
         <header className="topbar">
           <button className="hamburger" onClick={() => setSidebarOpen(o => !o)}>☰</button>
           <div className="topbar-title">{activeConv ? activeConv.title : "New chat"}<span>Ask questions about your documents</span></div>
-          <div className="badge"><span className="dot" /> Local · reranked</div>
+          <div className="badge"><span className="dot" /> Live · Groq · reranked</div>
         </header>
 
         <div className="thread">
